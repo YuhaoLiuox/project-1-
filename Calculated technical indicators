@@ -1,0 +1,27 @@
+def calculate_technical_indicators(df, col_name, intervals):
+        # get_RSI(df, col_name, intervals)  # faster but non-smoothed RSI
+        get_RSI_smooth(df, col_name, intervals)  # momentum
+        get_williamR(df, col_name, intervals)  # momentum
+        get_mfi(df, intervals)  # momentum
+        # get_MACD(df, col_name, intervals)  # momentum, ready to use +3
+        # get_PPO(df, col_name, intervals)  # momentum, ready to use +1
+        get_ROC(df, col_name, intervals)  # momentum
+        get_CMF(df, col_name, intervals)  # momentum, volume EMA
+        get_CMO(df, col_name, intervals)  # momentum
+        get_SMA(df, col_name, intervals)
+        get_SMA(df, 'open', intervals)
+        get_EMA(df, col_name, intervals)
+        get_WMA(df, col_name, intervals)
+        get_HMA(df, col_name, intervals)
+        get_TRIX(df, col_name, intervals)  # trend
+        get_CCI(df, col_name, intervals)  # trend
+        get_DPO(df, col_name, intervals)  # Trend oscillator
+        get_kst(df, col_name, intervals)  # Trend
+        get_DMI(df, col_name, intervals)  # trend
+        get_BB_MAV(df, col_name, intervals)  # volatility
+        # get_PSI(df, col_name, intervals)  # can't find formula
+        get_force_index(df, intervals)  # volume
+        get_kdjk_rsv(df, intervals)  # ready to use, +2*len(intervals), 2 rows
+        get_EOM(df, col_name, intervals)  # volume momentum
+        get_volume_delta(df)  # volume +1
+        get_IBR(df)  # ready to use +1
