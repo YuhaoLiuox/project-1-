@@ -1,0 +1,47 @@
+from matplotlib import pyplot as plt
+%matplotlib inline
+InteractiveShell.ast_node_interactivity = "last"
+
+plt.figure()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.plot(history.history['f1_metric'])
+plt.plot(history.history['val_f1_metric'])
+
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['train_loss', 'val_loss', 'f1', 'val_f1'], loc='upper left')
+plt.show()
+
+
+from sklearn.metrics import confusion_matrix, roc_auc_score, cohen_kappa_score
+import seaborn as sns
+
+model = load_model(best_model_path)
+test_res = model.evaluate(x_test, y_test, verbose=0)
+print("keras evaluate=", test_res)
+pred = model.predict(x_test)
+pred_classes = np.argmax(pred, axis=1)   
+y_test_classes = np.argmax(y_test, axis=1)
+#check_baseline(pred_classes, y_test_classes)
+conf_mat = confusion_matrix(y_test_classes, pred_classes)
+print(conf_mat)
+
+# ax = sns.heatmap(conf_mat, xticklabels=labels, yticklabels=labels, annot=True)
+# ax.xaxis.set_ticks_position('top')
+f1_weighted = f1_score(y_test_classes, pred_classes, labels=None, 
+         average='weighted', sample_weight=None)
+print("F1 score (weighted)", f1_weighted)
+print("F1 score (macro)", f1_score(y_test_classes, pred_classes, labels=None, 
+         average='macro', sample_weight=None))
+print("F1 score (micro)", f1_score(y_test_classes, pred_classes, labels=None, 
+         average='micro', sample_weight=None))  # weighted and micro preferred in case of imbalance
+# https://scikit-learn.org/stable/modules/model_evaluation.html#cohen-s-kappa --> supports multiclass; ref: https://stats.stackexchange.com/questions/82162/cohens-kappa-in-plain-english
+print("cohen's Kappa", cohen_kappa_score(y_test_classes, pred_classes))
+
+prec = []
+for i, row in enumerate(conf_mat):
+    prec.append(np.round(row[i]/np.sum(row), 2))
+    print("precision of class {} = {}".format(i, prec[i]))
+print("precision avg", sum(prec)/len(prec))
