@@ -1,0 +1,58 @@
+from tensorflow.keras.layers import Conv1D
+from tensorflow.keras.layers import MaxPool1D,GlobalAveragePooling1D
+def create_model_cnn1(params):
+    model = Sequential()
+    conv1d_layer1 = Conv1D(params["conv1d_layers"]["conv1d_filters_1"],
+                               params["conv1d_layers"]["conv1d_kernel_size_1"],
+                               strides=params["conv1d_layers"]["conv1d_strides_1"],
+                               padding='same',activation="relu", use_bias=True,
+                               kernel_initializer='glorot_uniform',
+                               input_shape=(x_train.shape[1],
+                                        x_train.shape[2]))
+    model.add(conv1d_layer1)
+    
+    #model.add(Dropout(params['conv1d_layers']['conv1d_do_1']))
+    
+    
+    
+    if params["conv1d_layers"]['layers'] == 'two':
+        conv1d_layer2 = Conv1D(params["conv1d_layers"]["conv1d_filters_2"],
+                               params["conv1d_layers"]["conv1d_kernel_size_2"],
+                               strides=params["conv1d_layers"]["conv1d_strides_2"],
+                               kernel_regularizer=regularizers.l2(params["conv1d_layers"]["kernel_regularizer_2"]),
+                               padding='same',activation="relu", use_bias=True,
+                               kernel_initializer='glorot_uniform')
+        model.add(conv1d_layer2)        
+        model.add(MaxPool1D(3))
+        
+        
+    
+    conv1d_layer3 = Conv1D(50,2,strides=2,kernel_regularizer=regularizers.l2(0),
+                               padding='same',activation="relu", use_bias=True,
+                               kernel_initializer='glorot_uniform')
+    model.add(conv1d_layer3)
+    conv1d_layer4 = Conv1D(50,2,strides=2,kernel_regularizer=regularizers.l2(0),
+                               padding='same',activation="relu", use_bias=True,
+                               kernel_initializer='glorot_uniform')
+    model.add(conv1d_layer4)
+    model.add(GlobalAveragePooling1D())
+    model.add(Dropout(params['conv1d_layers']['conv1d_do_2']))
+       
+    
+    model.add(Flatten())
+    
+    model.add(Dense(params['dense_layers']["dense_nodes_1"], activation='relu'))  #全连接层
+    model.add(Dropout(params['dense_layers']['dense_do_1']))
+    
+    
+    model.add(Dense(2, activation='sigmoid'))
+    
+    if params["optimizer"] == 'rmsprop':
+        optimizer = optimizers.RMSprop(lr=params["lr"])
+    elif params["optimizer"] == 'sgd':
+        optimizer = optimizers.SGD(lr=params["lr"], decay=1e-6, momentum=0.9, nesterov=True)
+    elif params["optimizer"] == 'adam':
+        optimizer = optimizers.Adam(learning_rate=params["lr"], beta_1=0.9, beta_2=0.999, amsgrad=False)
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['categorical_accuracy', f1_metric])
+    #model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', f1_metric])
+    return model
