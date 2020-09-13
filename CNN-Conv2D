@@ -1,0 +1,51 @@
+def create_model_cnn(params):
+    model = Sequential()
+
+    print("Training with params {}".format(params))
+    # (batch_size, timesteps, data_dim)
+    # x_train, y_train = get_data_cnn(df, df.head(1).iloc[0]["timestamp"])[0:2]
+    conv2d_layer1 = Conv2D(params["conv2d_layers"]["conv2d_filters_1"],
+                           params["conv2d_layers"]["conv2d_kernel_size_1"],
+                           strides=params["conv2d_layers"]["conv2d_strides_1"],
+                           kernel_regularizer=regularizers.l2(params["conv2d_layers"]["kernel_regularizer_1"]), 
+                           padding='same',activation="relu", use_bias=True,
+                           kernel_initializer='glorot_uniform',
+                           input_shape=(x_train[0].shape[0],
+                                        x_train[0].shape[1], x_train[0].shape[2]))
+    model.add(conv2d_layer1)
+    if params["conv2d_layers"]['conv2d_mp_1'] == 1:
+        model.add(MaxPool2D(pool_size=2))
+    model.add(Dropout(params['conv2d_layers']['conv2d_do_1']))  
+    if params["conv2d_layers"]['layers'] == 'two':
+        conv2d_layer2 = Conv2D(params["conv2d_layers"]["conv2d_filters_2"],
+                               params["conv2d_layers"]["conv2d_kernel_size_2"],
+                               strides=params["conv2d_layers"]["conv2d_strides_2"],
+                               kernel_regularizer=regularizers.l2(params["conv2d_layers"]["kernel_regularizer_2"]),
+                               padding='same',activation="relu", use_bias=True,
+                               kernel_initializer='glorot_uniform')
+        model.add(conv2d_layer2)
+        if params["conv2d_layers"]['conv2d_mp_2'] == 1:
+            model.add(MaxPool2D(pool_size=2))
+        model.add(Dropout(params['conv2d_layers']['conv2d_do_2']))
+
+    model.add(Flatten())    
+
+    model.add(Dense(params['dense_layers']["dense_nodes_1"], activation='relu'))  
+    model.add(Dropout(params['dense_layers']['dense_do_1']))
+
+    if params['dense_layers']["layers"] == 'two':
+        model.add(Dense(params['dense_layers']["dense_nodes_2"], activation='relu', 
+                        kernel_regularizer=params['dense_layers']["kernel_regularizer_1"]))
+        model.add(Dropout(params['dense_layers']['dense_do_2']))
+
+    model.add(Dense(2, activation='softmax'))
+    if params["optimizer"] == 'rmsprop':
+        optimizer = optimizers.RMSprop(lr=params["lr"])
+    elif params["optimizer"] == 'sgd':
+        optimizer = optimizers.SGD(lr=params["lr"], decay=1e-6, momentum=0.9, nesterov=True)
+    elif params["optimizer"] == 'adam':
+        optimizer = optimizers.Adam(learning_rate=params["lr"], beta_1=0.9, beta_2=0.999, amsgrad=False)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['categorical_accuracy', f1_metric])
+    # from keras.utils.vis_utils import plot_model use this too for diagram with plot
+    # model.summary(print_fn=lambda x: print(x + '\n'))
+    return model
