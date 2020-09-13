@@ -2,6 +2,9 @@ from sklearn.utils.class_weight import compute_class_weight
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.utils import get_custom_objects
+from functools import *
+from sklearn.metrics import f1_score
+from tensorflow.keras.metrics import AUC
 
 def get_sample_weights(y):
     """
@@ -23,6 +26,11 @@ def get_sample_weights(y):
         # sample_weights = np.where(sample_weights == i, class_weights[int(i)], y_)
 
     return sample_weights
+
+def f1_custom(y_true, y_pred):
+    y_t = np.argmax(y_true, axis=1)
+    y_p = np.argmax(y_pred, axis=1)
+    f1_score(y_t, y_p, labels=None, average='weighted', sample_weight=None, zero_division='warn')
 
 def reshape_as_image(x, img_width, img_height):
     x_temp = np.zeros((len(x), img_height, img_width))  
@@ -75,6 +83,15 @@ def f1_weighted(y_true, y_pred):
     f1s = tf.math.divide(numerators, denominators)
     weighted_f1 = tf.reduce_sum(f.math.multiply(f1s, weights))
     return weighted_f1
+
+def check_baseline(pred, y_test):
+    print("size of test set", len(y_test))
+    e = np.equal(pred, y_test)
+    print("TP class counts", np.unique(y_test[e], return_counts=True))
+    print("True class counts", np.unique(y_test, return_counts=True))
+    print("Pred class counts", np.unique(pred, return_counts=True))
+    holds = np.unique(y_test, return_counts=True)[1][2]  # number 'hold' predictions
+    print("baseline acc:", (holds/len(y_test)*100))
 
 def f1_metric(y_true, y_pred):
     """
