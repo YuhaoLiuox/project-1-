@@ -1,0 +1,75 @@
+numshare=7
+length=len(df1)/numshare
+basecash=setcash
+cash=setcash
+#didcash=basecash/numshare
+interval=5
+
+
+for i in range(1,len(df4)):
+    k=0
+    for j in range(0,numshare):  
+        if df1.loc[j+numshare*i-numshare,'pre']==1:
+            k+=1
+    if k!=0:
+        didcash=df1.loc[numshare-1+numshare*i-numshare,'netcash']/k
+    
+    for j in range(0,numshare):
+        if i>=5:
+            if df1.loc[j+numshare*i-5*numshare,'position']==1:
+                cash=df1.loc[j+numshare*i-5*numshare,'share']*df1.loc[j+numshare*i,'close']+df1.loc[j+numshare*i-1,'netcash']                    
+                df1.loc[j+numshare*i,'netcash']=cash
+                holdshare=df1.loc[j+numshare*i-numshare,'holdshare']-df1.loc[j+numshare*i-5*numshare,'share']
+                df1.loc[j+numshare*i,'holdshare']=holdshare
+                df1.loc[j+numshare*i,'position']=2
+                df1.loc[j+numshare*i-5*numshare,'position']=2
+           
+        if i>=4:
+            if df1.loc[j+numshare*i-4*numshare,'position']==1:
+                ratio=(df1.loc[j+numshare*i-1*numshare,'close']-df1.loc[j+numshare*i-4*numshare,'close'])/df1.loc[j+numshare*i-4*numshare,'close']
+                if ratio<-0.01:       #-0.02            
+                    cash=df1.loc[j+numshare*i-4*numshare,'share']*df1.loc[j+numshare*i,'close']+df1.loc[j+numshare*i-1,'netcash']   
+                    df1.loc[j+numshare*i,'netcash']=cash
+                    holdshare=df1.loc[j+numshare*i-numshare,'holdshare']-df1.loc[j+numshare*i-4*numshare,'share']
+                    df1.loc[j+numshare*i,'holdshare']=holdshare
+                    df1.loc[j+numshare*i,'position']=2
+                    df1.loc[j+numshare*i-4*numshare,'position']=2 
+               
+              
+        
+        
+        
+                
+        if df1.loc[j+numshare*i-numshare,'pre']==1:
+            share=int(didcash/df1.loc[j+numshare*i,'close'])
+            if share!=0:
+                if df1.loc[j+numshare*i,'first']==1:
+                    df1.loc[j+numshare*i,'share']=share
+                    df1.loc[j+numshare*i,'holdshare']=share
+                else:
+                    df1.loc[j+numshare*i,'share']=share
+                    df1.loc[j+numshare*i,'holdshare']=df1.loc[j+numshare*i-numshare,'holdshare']+share
+                
+                cash=df1.loc[j+numshare*i-1,'netcash']-df1.loc[j+numshare*i,'close']*share
+                df1.loc[j+numshare*i,'netcash']=cash
+                df1.loc[j+numshare*i,'position']=1    #buy                
+            
+            else:
+                if df1.loc[j+numshare*i,'position']!=2:
+                    df1.loc[j+numshare*i,'holdshare']=df1.loc[j+numshare*i-numshare,'holdshare']
+                    df1.loc[j+numshare*i,'netcash']=df1.loc[j+numshare*i-1,'netcash'] 
+                        
+                    
+
+        if df1.loc[j+numshare*i-numshare,'pre']==0:
+            if df1.loc[j+numshare*i,'position']!=2:
+                df1.loc[j+numshare*i,'holdshare']=df1.loc[j+numshare*i-numshare,'holdshare']
+                df1.loc[j+numshare*i,'netcash']=df1.loc[j+numshare*i-1,'netcash'] 
+
+                
+    toclose=0.00
+    for j in range(0,numshare):
+        toclose+=df1.loc[j+numshare*i,'close']*df1.loc[j+numshare*i,'holdshare']
+    toclose+=df1.loc[numshare-1+numshare*i,'netcash']
+    net=(toclose-basecash)/basecash
+    df4.loc[i,'net']=net*100#(pow(1+net,len(df4)/250)-1)*100
