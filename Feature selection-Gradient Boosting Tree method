@@ -1,0 +1,20 @@
+num_features =100  # should be a perfect square
+
+selection_method = 'all'
+topk = 320 if selection_method == 'all' else num_features
+# if train_split >= 0.8:
+#     topk = 400
+# else:
+#     topk = 300
+
+
+
+from sklearn.feature_selection import SelectFromModel
+from sklearn.ensemble import GradientBoostingClassifier
+
+select_from_model=SelectFromModel(GradientBoostingClassifier(),max_features=num_features)
+x_train=select_from_model.fit_transform(x_main, y_train)
+x_cv = select_from_model.transform(x_cv)
+x_test = select_from_model.transform(x_test)
+print("Shape of x, y train/cv/test {} {} {} {} {} {}".format(x_train.shape, 
+                                                             y_train.shape, x_cv.shape, y_cv.shape, x_test.shape, y_test.shape))
