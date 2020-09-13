@@ -1,0 +1,38 @@
+sample_weights = get_sample_weights(y_train)
+print("Test sample_weights")
+rand_idx = np.random.randint(0, 1000, 30)
+print(y_train[rand_idx])
+print(sample_weights[rand_idx])
+
+one_hot_enc = OneHotEncoder(sparse=False, categories='auto')  
+y_train = one_hot_enc.fit_transform(y_train.reshape(-1, 1))
+print("y_train",y_train.shape)
+y_cv = one_hot_enc.transform(y_cv.reshape(-1, 1))   
+y_test = one_hot_enc.transform(y_test.reshape(-1, 1))
+
+dim = int(np.sqrt(num_features))
+x_train = reshape_as_image(x_train, dim, dim)
+x_cv = reshape_as_image(x_cv, dim, dim)
+x_test = reshape_as_image(x_test, dim, dim)
+print("final shape of x, y train/test {} {} {} {}".format(x_train.shape, y_train.shape, x_test.shape, y_test.shape))
+
+# adding a 1-dim for channels (3)
+x_train = np.stack((x_train,) * 3, axis=-1)   
+x_test = np.stack((x_test,) * 3, axis=-1)
+x_cv = np.stack((x_cv,) * 3, axis=-1)
+print("final shape of x, y train/test {} {} {} {}".format(x_train.shape, y_train.shape, x_test.shape, y_test.shape))
+
+from matplotlib import pyplot as plt    
+%matplotlib inline
+
+fig = plt.figure(figsize=(dim, dim))
+columns = rows = 3
+for i in range(1, columns*rows +1):
+    index = np.random.randint(len(x_train))
+    img = x_train[index]
+    fig.add_subplot(rows, columns, i)
+    plt.axis("off")
+    plt.title('image_'+str(index)+'_class_'+str(np.argmax(y_train[index])), fontsize=10)
+    plt.subplots_adjust(wspace=0.2, hspace=0.2)
+    plt.imshow(img)
+plt.show()
