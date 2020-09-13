@@ -1,0 +1,57 @@
+num_features =100 # should be a perfect square
+
+selection_method = 'all'
+topk = 320 if selection_method == 'all' else num_features
+# if train_split >= 0.8:
+#     topk = 400
+# else:
+#     topk = 300
+
+from operator import itemgetter
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
+
+if selection_method == 'anova' or selection_method == 'all':
+    select_k_best = SelectKBest(f_classif, k=topk)
+    if selection_method != 'all':
+        x_train = select_k_best.fit_transform(x_main, y_train)
+        x_cv = select_k_best.transform(x_cv)
+        x_test = select_k_best.transform(x_test)
+    else:
+        select_k_best.fit(x_main, y_train)
+    
+    selected_features_anova = itemgetter(*select_k_best.get_support(indices=True))(list_features)
+    print(selected_features_anova)
+    print(select_k_best.get_support(indices=True))
+    print("****************************************")
+    
+if selection_method == 'mutual_info' or selection_method == 'all':
+    select_k_best = SelectKBest(mutual_info_classif, k=topk)
+    if selection_method != 'all':
+        x_train = select_k_best.fit_transform(x_main, y_train)
+        x_cv = select_k_best.transform(x_cv)
+        x_test = select_k_best.transform(x_test)
+    else:
+        select_k_best.fit(x_main, y_train)
+
+    selected_features_mic = itemgetter(*select_k_best.get_support(indices=True))(list_features)
+    print(len(selected_features_mic), selected_features_mic)
+    print(select_k_best.get_support(indices=True))
+    
+if selection_method == 'all':
+    common = list(set(selected_features_anova).intersection(selected_features_mic))
+    print("common selected featues", len(common), common)
+    if len(common) < num_features:
+        raise Exception('number of common features found {} < {} required features. Increase "topk variable"'.format(len(common), num_features))
+    feat_idx = []
+    for c in common:
+        feat_idx.append(list_features.index(c))
+    feat_idx = sorted(feat_idx[0:num_features])
+    print(feat_idx)
+    
+if selection_method == 'all':
+    x_train = x_train[:, feat_idx]
+    x_cv = x_cv[:, feat_idx]
+    x_test = x_test[:, feat_idx]
+
+print("Shape of x, y train/cv/test {} {} {} {} {} {}".format(x_train.shape, 
+                                                             y_train.shape, x_cv.shape, y_cv.shape, x_test.shape, y_test.shape))
