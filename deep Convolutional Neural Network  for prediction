@@ -1,0 +1,48 @@
+from tensorflow.keras.models import Sequential, load_model, Model
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, LeakyReLU
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger, Callback
+from tensorflow.keras import optimizers
+from tensorflow.keras.regularizers import l2, l1, l1_l2
+from tensorflow.keras.initializers import RandomUniform, RandomNormal
+from tensorflow.keras.models import load_model
+from tensorflow.keras import regularizers
+from IPython.display import SVG
+from tensorflow.keras.utils import model_to_dot, plot_model
+
+params = {'batch_size': 80, 'conv2d_layers': {'conv2d_do_1': 0.22, 'conv2d_filters_1': 35, 'conv2d_kernel_size_1': 2, 'conv2d_mp_1': 2, 
+                                              'conv2d_strides_1': 1, 'kernel_regularizer_1': 0.0, 'conv2d_do_2': 0.05, 
+                                              'conv2d_filters_2': 20, 'conv2d_kernel_size_2': 2, 'conv2d_mp_2': 2, 'conv2d_strides_2': 2, 
+                                              'kernel_regularizer_2': 0.0, 'layers': 'two'}, 
+          
+           'conv1d_layers':{'conv1d_filters_1': 40, 'conv1d_kernel_size_1': 2,'conv1d_strides_1': 1 ,'conv1d_do_1': 0.22,
+                          'layers': 'two','conv1d_filters_2': 30,'conv1d_kernel_size_2': 2,'conv1d_strides_2': 1,
+                          'kernel_regularizer_1': 0.0,'kernel_regularizer_2': 0.0,'conv1d_do_2': 0.5,
+                          'conv1d_filters_3': 20, 'conv1d_kernel_size_3': 2,'conv1d_strides_3': 1 ,'conv1d_do_3': 0.05,
+                           'kernel_regularizer_3': 0.0,'conv1d_mp_1':1},
+          
+          'dense_layers': {'dense_do_1': 0.22, 'dense_nodes_1': 100, 'kernel_regularizer_1': 0.0, 'layers': 'one'},
+          'epochs': 3000, 'lr': 0.001, 'optimizer': 'adam'}
+          
+
+
+model = create_model_cnn(params)
+
+import os
+
+best_model_path = os.path.join('.', 'best_model_keras')
+es = EarlyStopping(monitor='val_loss', mode='min', verbose=1,
+                   patience=100, min_delta=0.0001)
+# csv_logger = CSVLogger(os.path.join(OUTPUT_PATH, 'log_training_batch.log'), append=True)
+rlp = ReduceLROnPlateau(monitor='val_loss', factor=0.02, patience=20, verbose=1, mode='min',
+                        min_delta=0.001, cooldown=1, min_lr=0.0001)
+mcp = ModelCheckpoint(best_model_path, monitor='val_f1_metric', verbose=1,
+                      save_best_only=True, save_weights_only=False, mode='max', period=1)  # val_f1_metric
+                      
+history = model.fit(x_train, y_train, epochs=params['epochs'], verbose=1,
+                            batch_size=64, shuffle=True,
+                            # validation_split=0.3,
+                            validation_data=(x_cv, y_cv),
+                            callbacks=[mcp, rlp, es],
+                            #sample_weight=sample_weights
+                            ) 
