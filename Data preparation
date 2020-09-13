@@ -1,0 +1,88 @@
+import yfinance as yf
+import os
+import re
+from operator import itemgetter
+from IPython.core.interactiveshell import InteractiveShell
+import pandas as pd
+import pickle
+import numpy as np
+from sklearn.feature_selection import SelectKBest, f_classif, mutual_info_classif
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.utils import compute_class_weight
+from tqdm.auto import tqdm
+from logger import Logger
+from utils import *
+import pandas_datareader as pd_data
+
+Data=yf.Ticker('WMT')
+start_date = '2005-01-10'
+end_date = '2010-01-10'
+MyData=Data.history(start=start_date,end=end_date,period='1d')
+
+start_date1 = '2010-01-11'
+end_date1 = '2020-01-10'
+MyData1=Data.history(start=start_date1,end=end_date1,period='1d')
+
+df=pd.concat([MyData,MyData1],axis=0)
+df.reset_index(inplace=True)
+
+df['timestamp']=df['Date']
+df['high']=df['High']
+df['low']=df['Low']
+df['open']=df['Open']
+df['close']=df['Close']
+df['volume']=df['Volume']
+del df['Date']
+del df['High']
+del df['Low']
+del df['Open']
+del df['Close']
+del df['Volume']
+del df['Dividends']
+del df['Stock Splits']
+
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+df.sort_values('timestamp', inplace=True)
+df.reset_index(drop=True, inplace=True)
+intervals = range(6, 27)  # 21
+calculate_technical_indicators(df, 'close', intervals)
+prev_len = len(df)
+df.dropna(inplace=True)
+df.reset_index(drop=True, inplace=True)
+
+df['labels']=(df['close'].shift(-1)<df['close'].shift(-6))+1-1
+df.drop([3749,3748,3747,3746,3745],inplace=True)
+
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+from sklearn.model_selection import train_test_split
+# from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
+from collections import Counter
+
+list_features = list(df.loc[:, 'high':'eom_26'].columns)  #创建列名
+print('Total number of features', len(list_features))
+cutnum=int(len(df)*0.9)
+x_train=df.loc[0:cutnum, 'high':'eom_26'].values
+x_test=df.loc[cutnum+1:, 'high':'eom_26'].values
+y_train=df.loc[0:cutnum, 'labels'].values
+y_test = df.loc[cutnum+1:, 'labels'].values
+
+# smote = RandomOverSampler(random_state=42, sampling_strategy='not majority')
+# x_train, y_train = smote.fit_resample(x_train, y_train)
+# print('Resampled dataset shape %s' % Counter(y_train))
+
+if 0.7*x_train.shape[0] < 2500:
+    train_split = 0.8
+else:
+    train_split = 0.7
+# train_split = 0.7
+print('train_split =',train_split)
+x_train, x_cv, y_train, y_cv = train_test_split(x_train, y_train, train_size=train_split, test_size=1-train_split, 
+                                                random_state=2, shuffle=True, stratify=y_train)
+mm_scaler = MinMaxScaler(feature_range=(0, 1)) # or StandardScaler?
+x_train = mm_scaler.fit_transform(x_train)
+x_cv = mm_scaler.transform(x_cv)
+x_test = mm_scaler.transform(x_test)
+
+x_main = x_train.copy()
+print("Shape of x, y train/cv/test {} {} {} {} {} {}".format(x_train.shape, y_train.shape, x_cv.shape, y_cv.shape, x_test.shape, y_test.shape))
