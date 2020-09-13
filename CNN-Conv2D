@@ -34,18 +34,19 @@ def create_model_cnn(params):
     model.add(Dropout(params['dense_layers']['dense_do_1']))
 
     if params['dense_layers']["layers"] == 'two':
-        model.add(Dense(params['dense_layers']["dense_nodes_2"], activation='relu', 
-                        kernel_regularizer=params['dense_layers']["kernel_regularizer_1"]))
+        model.add(Dense(params['dense_layers']["dense_nodes_2"], activation='relu'))
         model.add(Dropout(params['dense_layers']['dense_do_2']))
 
-    model.add(Dense(2, activation='softmax'))
+    model.add(Dense(2, activation='sigmoid'))
     if params["optimizer"] == 'rmsprop':
         optimizer = optimizers.RMSprop(lr=params["lr"])
     elif params["optimizer"] == 'sgd':
         optimizer = optimizers.SGD(lr=params["lr"], decay=1e-6, momentum=0.9, nesterov=True)
     elif params["optimizer"] == 'adam':
         optimizer = optimizers.Adam(learning_rate=params["lr"], beta_1=0.9, beta_2=0.999, amsgrad=False)
-    model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['categorical_accuracy', f1_metric])
+    #model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy', f1_metric])
+    model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['categorical_accuracy', f1_metric])
     # from keras.utils.vis_utils import plot_model use this too for diagram with plot
     # model.summary(print_fn=lambda x: print(x + '\n'))
+   
     return model
