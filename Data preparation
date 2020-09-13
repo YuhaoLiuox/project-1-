@@ -86,3 +86,5 @@ x_test = mm_scaler.transform(x_test)
 
 x_main = x_train.copy()
 print("Shape of x, y train/cv/test {} {} {} {} {} {}".format(x_train.shape, y_train.shape, x_cv.shape, y_cv.shape, x_test.shape, y_test.shape))
+_labels, _counts = np.unique(y_train, return_counts=True)
+print("percentage of class 0 = {}, class 1 = {}".format(_counts[0]/len(y_train) * 100, _counts[1]/len(y_train) * 100))
